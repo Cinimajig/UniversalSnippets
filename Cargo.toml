@@ -1,0 +1,19 @@
+[package]
+name = "usnip"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
+[dependencies]
+clipboard-win = "*"
+winapi = { version = "0.3.9", features = ["impl-default", "impl-debug", "winuser", "commctrl", "psapi", "handleapi"] }
+
+[build-dependencies]
+winres = "0.1.12"

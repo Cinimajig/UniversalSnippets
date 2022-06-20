@@ -383,6 +383,9 @@ impl WindowProc for MainWindow {
                     let wtext = wstring(&text);
                     TextOutW(dc, 15, 40, wtext.as_ptr(), wtext.len() as i32);
 
+                    let wtext = wstring("WARNING: It overwrites your clipboard, when used!");
+                    TextOutW(dc, 15, 70, wtext.as_ptr(), wtext.len() as i32);
+
                     EndPaint(window, &ps);
                 }
                 WM_HOTKEY => {

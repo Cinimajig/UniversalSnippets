@@ -118,7 +118,7 @@ fn fix_modifers(mods: u8) -> u8 {
 fn get_focus() -> HWND {
     use winapi::um::processthreadsapi::GetCurrentThreadId;
 
-    let mut result = 0;
+    let mut result = ptr::null_mut();
     let mut tid = 0;
     let mut pid = 0;
     
@@ -172,14 +172,13 @@ fn find_process(window: HWND) -> String {
     }
 }
 
-fn paste_data(window: HWND, data: &String) {
+fn paste_data(data: &String, modi: u16, key: u16) {
     use clipboard_win::*;
 
     if let Ok(_clip) = Clipboard::new_attempts(10) {
-        println!("ACCESS!");
         
-        let mut old_clip = String::new();
-        formats::Unicode.read_clipboard(&mut old_clip).unwrap();
+        // let mut old_clip = String::new();
+        // formats::Unicode.read_clipboard(&mut old_clip).unwrap();
 
         formats::Unicode.write_clipboard(data).unwrap();
 
@@ -188,6 +187,23 @@ fn paste_data(window: HWND, data: &String) {
                 type_: INPUT_KEYBOARD,
                 ..Default::default()
             };
+
+            let modifiers = GetAsyncKeyState(modi as i32) & 0x1;
+            let keys = GetAsyncKeyState(key as i32) & 0x1;
+            
+            if modifiers == 1 {
+                let ki = ip.u.ki_mut();
+                ki.dwFlags = KEYEVENTF_KEYUP;
+                ki.wVk = modi;
+                SendInput(1, &mut ip, mem::size_of::<INPUT>() as i32);
+            }
+
+            if keys == 1 {
+                let ki = ip.u.ki_mut();
+                ki.dwFlags = KEYEVENTF_KEYUP;
+                ki.wVk = key;
+                SendInput(1, &mut ip, mem::size_of::<INPUT>() as i32);
+            }
 
             {
                 let ki = ip.u.ki_mut();
@@ -219,7 +235,7 @@ fn paste_data(window: HWND, data: &String) {
             }
         }
 
-        formats::Unicode.write_clipboard(&old_clip).unwrap();
+        // formats::Unicode.write_clipboard(&old_clip).unwrap();
     }
 }
 
@@ -398,7 +414,7 @@ impl WindowProc for MainWindow {
                                 continue;
                             }
 
-                            paste_data(&hotkey.data);
+                            paste_data(&hotkey.data, hotkey.modifiers, hotkey.keycode);
                             break;
                         }
                     }

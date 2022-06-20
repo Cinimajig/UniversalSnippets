@@ -115,6 +115,31 @@ fn fix_modifers(mods: u8) -> u8 {
     mods
 }
 
+fn get_focus() -> HWND {
+    use winapi::um::processthreadsapi::GetCurrentThreadId;
+
+    let mut result = 0;
+    let mut tid = 0;
+    let mut pid = 0;
+    
+    unsafe {
+        result = GetFocus();
+
+        if result.is_null() {
+            let window = GetForegroundWindow();
+            if !window.is_null() {
+                tid = GetWindowThreadProcessId(window, &mut pid);
+                if AttachThreadInput(GetCurrentThreadId(), tid, 1) != 0 {
+                    result = GetFocus();
+                    AttachThreadInput(GetCurrentThreadId(), tid, 0);
+                }
+            }
+        }
+    }
+
+    result
+}
+
 fn find_process(window: HWND) -> String {
     unsafe {
         let mut pid = 0;
@@ -347,7 +372,7 @@ impl WindowProc for MainWindow {
                 WM_HOTKEY => {
                     let modifiers = LOWORD(lparam as u32);
                     let keycode = HIWORD(lparam as u32);
-                    let foreground_window = GetForegroundWindow();
+                    let foreground_window = get_focus();
 
                     for hotkey in &self.register {
                         if !hotkey.enabled {

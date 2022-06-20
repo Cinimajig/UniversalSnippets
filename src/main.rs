@@ -172,7 +172,7 @@ fn find_process(window: HWND) -> String {
     }
 }
 
-fn paste_data(data: &String, modi: u16, key: u16) {
+fn paste_data(handle: HWND, data: &String, modi: u16, key: u16) {
     use clipboard_win::*;
 
     if let Ok(_clip) = Clipboard::new_attempts(10) {
@@ -417,7 +417,7 @@ impl WindowProc for MainWindow {
                                 continue;
                             }
 
-                            paste_data(&hotkey.data, hotkey.modifiers, hotkey.keycode);
+                            paste_data(self.handle, &hotkey.data, hotkey.modifiers, hotkey.keycode);
                             break;
                         }
                     }
